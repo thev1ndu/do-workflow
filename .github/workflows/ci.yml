@@ -1,4 +1,5 @@
 name: Deploy to DigitalOcean VPS
+
 on:
   push:
     branches: [ "main" ]
@@ -20,24 +21,20 @@ jobs:
         username: ${{ secrets.DO_SERVER_USERNAME }}
         key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
         script: |
-          # Ensure git is installed
-          sudo apt-get update
-          sudo apt-get install -y git
-          
-          # Ensure the directory exists
-          mkdir -p /var/www/html/do
-          
-          # Navigate to the directory
+          # Navigate to project directory
           cd /var/www/html/do
           
-          # Clone or pull the repository
-          if [ ! -d .git ]; then
-            # Use GitHub Personal Access Token for cloning
-            git clone https://${{ secrets.GITHUB_TOKEN }}@https://github.com/thev1ndu/do-workflow.git .
-          else
-            git pull origin main
-          fi
+          # Fetch latest changes and reset to latest
+          git fetch origin
+          git reset --hard origin/main
           
           # Set correct permissions
           sudo chown -R www-data:www-data .
           sudo chmod -R 755 .
+          
+          # Optional: Run build commands if needed
+          # npm install
+          # npm run build
+          
+          # Restart web server if necessary
+          sudo systemctl restart apache2
