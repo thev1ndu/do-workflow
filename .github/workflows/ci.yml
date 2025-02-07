@@ -1,5 +1,4 @@
 name: Deploy to DigitalOcean VPS
-
 on:
   push:
     branches: [ "main" ]
@@ -21,17 +20,14 @@ jobs:
         username: ${{ secrets.DO_SERVER_USERNAME }}
         key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
         script: |
-          # Update and install git
-          sudo apt-get update
-          sudo apt-get install -y git
-
           # Ensure project directory exists
           sudo mkdir -p /var/www/html/do
           
           # Change to project directory
           cd /var/www/html/do
           
-          # Remove existing content
+          # Remove existing git repository and contents
+          sudo rm -rf .git
           sudo rm -rf *
           
           # Clone the entire repository
