@@ -1,0 +1,181 @@
+<?php
+
+include 'components/connect.php';
+
+session_start();
+
+if(isset($_SESSION['user_id'])){
+   $user_id = $_SESSION['user_id'];
+}else{
+   $user_id = '';
+};
+
+include 'components/wishlist_cart.php';
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>AstroShop | Product Catalogue</title>
+  <link rel="icon" type="image/x-icon" href="favicon.png">
+   
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+    .card {
+      box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    }
+    
+    .card:hover .position-absolute {
+      opacity: 1 !important;
+    }
+    
+    @media (max-width: 575.98px) {
+      .position-absolute {
+        opacity: 1 !important;
+      }
+    }
+    
+    .form-control:focus {
+      border-color: #0d6efd40;
+      box-shadow: 0 0 0 0.25rem rgba(13,110,253,.15);
+    }
+    
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+   
+<?php include 'components/header.php'; ?>
+
+
+<section class="orders py-8">
+   <br>
+   <h1 class="display-6 fw-bold" style="color: #2b3452; text-align: center;">
+    
+            <span class="badge rounded-pill mb-2" style="background-color: rgba(13,110,253,0.1); color: #0d6efd; font-size: 24px;">
+        Product Catalogue
+      </span>
+            </h1><br>
+    
+   <div class="container mx-auto px-4">
+   <div class="row g-4">
+   <?php
+     $select_products = $conn->prepare("SELECT * FROM `products`"); 
+     $select_products->execute();
+     if($select_products->rowCount() > 0){
+      while($fetch_product = $select_products->fetch(PDO::FETCH_ASSOC)){
+   ?>
+         <div class="col-6 col-md-4 col-lg-3">
+        <div class="card h-100 border-0" style="background: white; transition: all 0.25s ease-in-out;">
+          <div class="position-relative">
+            <a href="view.php?pid=<?= $fetch_product['id']; ?>" class="d-block" style="aspect-ratio: 1;">
+              <img src="uploaded_img/<?= $fetch_product['image_01']; ?>" 
+                   class="card-img-top h-100 w-100" 
+                   alt="<?= $fetch_product['name']; ?>"
+                   style="object-fit: cover;">
+            </a>
+            
+            <div class="position-absolute top-0 end-0 p-2 d-flex flex-column gap-2" 
+                 style="opacity: 0; transition: all 0.2s ease-in-out;">
+              <form method="post">
+                <input type="hidden" name="pid" value="<?= $fetch_product['id']; ?>">
+                <input type="hidden" name="name" value="<?= $fetch_product['name']; ?>">
+                <input type="hidden" name="price" value="<?= $fetch_product['price']; ?>">
+                <input type="hidden" name="image" value="<?= $fetch_product['image_01']; ?>">
+                
+                <button type="submit" name="add_to_wishlist" 
+                        class="btn btn-light shadow-sm rounded-circle d-flex align-items-center justify-content-center" 
+                        style="width: 35px; height: 35px; backdrop-filter: blur(4px); background: rgba(255,255,255,0.9);">
+                  <i class="fas fa-heart" style="color: #dc3545; font-size: 0.9rem;"></i>
+                </button>
+              </form>
+              
+              <a href="view.php?pid=<?= $fetch_product['id']; ?>" 
+                 class="btn btn-light shadow-sm rounded-circle d-flex align-items-center justify-content-center" 
+                 style="width: 35px; height: 35px; backdrop-filter: blur(4px); background: rgba(255,255,255,0.9);">
+                <i class="fas fa-eye" style="color: #0d6efd; font-size: 0.9rem;"></i>
+              </a>
+            </div>
+          </div>
+
+          <div class="card-body p-3">
+            <h5 class="card-title mb-1" style="font-size: 0.95rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              <?= $fetch_product['name']; ?>
+            </h5>
+
+            <p class="text-primary mb-2" style="font-weight: 600; font-size: 1.1rem;">
+              $<?= number_format($fetch_product['price'], 2); ?>
+            </p>
+
+            <form method="post" class="d-flex gap-2 align-items-center">
+              <input type="hidden" name="pid" value="<?= $fetch_product['id']; ?>">
+              <input type="hidden" name="name" value="<?= $fetch_product['name']; ?>">
+              <input type="hidden" name="price" value="<?= $fetch_product['price']; ?>">
+              <input type="hidden" name="image" value="<?= $fetch_product['image_01']; ?>">
+
+              <input type="number" 
+                     name="qty" 
+                     class="form-control form-control-sm px-2" 
+                     style="width: 65px;" 
+                     min="1" 
+                     max="99" 
+                     value="1" 
+                     onkeypress="if(this.value.length == 2) return false;">
+
+              <button type="submit" 
+                      name="add_to_cart" 
+                      class="btn btn-primary btn-sm flex-grow-1 d-flex align-items-center justify-content-center gap-2">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="d-none d-sm-inline">Add</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+   <?php
+      }
+   }else{
+      echo '<div class="col-12 text-center"><p class="alert alert-info">No products added yet!</p></div>';
+   }
+   ?>
+</div>
+   </div>
+</section>
+
+<br>
+<br>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+       const productCards = document.querySelectorAll('.product-card');
+       productCards.forEach(card => {
+          card.addEventListener('mouseover', function() {
+             this.style.transform = 'translateY(-10px)';
+          });
+          card.addEventListener('mouseout', function() {
+             this.style.transform = 'translateY(0)';
+          });
+       });
+    });
+  </script>
+
+<?php include 'components/footer.php'; ?>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>
