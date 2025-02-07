@@ -11,25 +11,78 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Deploy to DigitalOcean
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Prepare Deployment
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.DO_SERVER_IP }}
         username: ${{ secrets.DO_SERVER_USERNAME }}
         key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
         script: |
-          # Ensure project directory exists
+          # Debugging: Print current directory contents
+          echo "Current directory contents before cleanup:"
+          pwd
+          ls -la
+          
+          # Ensure project directory exists with correct permissions
           sudo mkdir -p /var/www/html/do
+          sudo chown -R $USER:$USER /var/www/html/do
           
           # Change to project directory
           cd /var/www/html/do
           
-          # Remove ALL existing files and directories
-          sudo rm -rf *
+          # Debugging: Print directory info
+          echo "Project directory:"
+          pwd
           
-          # Clone the entire repository
-          sudo git clone https://github.com/thev1ndu/do-workflow.git .
+          # Remove all existing files and git repositories
+          sudo rm -rf ./*
+          sudo rm -rf .git
+          
+          # Verify directory is empty
+          echo "Directory contents after cleanup:"
+          ls -la
+
+    - name: Deploy Repository
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.DO_SERVER_IP }}
+        username: ${{ secrets.DO_SERVER_USERNAME }}
+        key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
+        script: |
+          # Navigate to project directory
+          cd /var/www/html/do
+          
+          # Clone repository with verbose output
+          echo "Cloning repository..."
+          sudo git clone --verbose https://github.com/thev1ndu/do-workflow.git .
+          
+          # Debugging: Verify clone
+          echo "Repository clone status:"
+          ls -la
           
           # Set correct permissions
           sudo chown -R www-data:www-data /var/www/html/do
           sudo chmod -R 755 /var/www/html/do
+          
+          # Additional debugging
+          echo "Git repository information:"
+          sudo git remote -v
+          sudo git branch -a
+
+    - name: Verify Deployment
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.DO_SERVER_IP }}
+        username: ${{ secrets.DO_SERVER_USERNAME }}
+        key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
+        script: |
+          # Check deployment directory
+          echo "Final deployment directory contents:"
+          cd /var/www/html/do
+          ls -la
+          
+          # Verify git status
+          sudo git status
