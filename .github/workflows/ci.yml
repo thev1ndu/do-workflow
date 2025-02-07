@@ -10,9 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
     - name: Deploy to DigitalOcean
       uses: appleboy/ssh-action@master
       with:
@@ -23,20 +20,22 @@ jobs:
           # Ensure the directory exists
           mkdir -p /var/www/html/do
           
-          # Remove existing content
-          rm -rf /var/www/html/do/*
-          
-          # Copy files from GitHub Actions runner to server
-          scp -r ${{ github.workspace }}/* ${{ secrets.DO_SERVER_USERNAME }}@${{ secrets.DO_SERVER_IP }}:/var/www/html/do/
-          
-          # Navigate to project directory
+          # Navigate to the directory
           cd /var/www/html/do
+          
+          # If it's not a git repository, clone it first
+          if [ ! -d .git ]; then
+            git clone https://github.com/thev1ndu/do-workflow .
+          fi
+          
+          # Pull latest changes
+          git pull origin main
           
           # Set correct permissions
           sudo chown -R www-data:www-data .
           sudo chmod -R 755 .
           
-          # Optional: Run build commands if needed
+          # Optional: Run build commands
           # npm install
           # npm run build
           
