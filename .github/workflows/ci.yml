@@ -14,26 +14,21 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Clean Target Directory
+    - name: Prepare Deployment
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.DO_SERVER_IP }}
         username: ${{ secrets.DO_SERVER_USERNAME }}
         key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
         script: |
-          # Ensure project directory exists
+          # Remove the entire directory
+          sudo rm -rf /var/www/html/do
+          
+          # Recreate the directory
           sudo mkdir -p /var/www/html/do
           
-          # Change to project directory
-          cd /var/www/html/do
-          
-          # Remove all existing files and directories
-          sudo rm -rf ./*
-          sudo rm -rf ..[!.]*
-          sudo rm -rf ..?*
-          
-          # Verify directory is empty
-          ls -la
+          # Set proper permissions
+          sudo chown -R $USER:$USER /var/www/html/do
 
     - name: Deploy Repository
       uses: appleboy/ssh-action@master
