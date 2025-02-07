@@ -35,7 +35,7 @@ jobs:
           sudo rm -rf *
           
           # Clone the entire repository
-          sudo git clone https://github.com/thev1ndu/do-workflow.git .
+          sudo git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME.git .
           
           # Set proper permissions
           sudo chown -R www-data:www-data /var/www/html/do
