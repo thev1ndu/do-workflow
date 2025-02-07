@@ -14,7 +14,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Prepare Deployment
+    - name: Clean Target Directory
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.DO_SERVER_IP }}
@@ -27,7 +27,7 @@ jobs:
           # Change to project directory
           cd /var/www/html/do
           
-          # Force remove all contents, including hidden files
+          # Remove all existing files and directories
           sudo rm -rf ./*
           sudo rm -rf ..[!.]*
           sudo rm -rf ..?*
@@ -45,9 +45,12 @@ jobs:
           # Navigate to project directory
           cd /var/www/html/do
           
-          # Force clone repository
+          # Clone repository
           sudo git clone https://github.com/thev1ndu/do-workflow.git .
           
           # Set correct permissions
           sudo chown -R www-data:www-data /var/www/html/do
           sudo chmod -R 755 /var/www/html/do
+          
+          # Restart Apache
+          sudo systemctl restart apache2
