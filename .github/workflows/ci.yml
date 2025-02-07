@@ -1,5 +1,4 @@
 name: Deploy to DigitalOcean VPS
-
 on:
   push:
     branches: [ "main" ]
@@ -21,12 +20,17 @@ jobs:
         username: ${{ secrets.DO_SERVER_USERNAME }}
         key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
         script: |
+          # Ensure the directory exists
+          mkdir -p /var/www/html/do
+          
+          # Remove existing content
+          rm -rf /var/www/html/do/*
+          
+          # Copy files from GitHub Actions runner to server
+          scp -r ${{ github.workspace }}/* ${{ secrets.DO_SERVER_USERNAME }}@${{ secrets.DO_SERVER_IP }}:/var/www/html/do/
+          
           # Navigate to project directory
           cd /var/www/html/do
-          
-          # Fetch latest changes and reset to latest
-          git fetch origin
-          git reset --hard origin/main
           
           # Set correct permissions
           sudo chown -R www-data:www-data .
