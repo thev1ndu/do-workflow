@@ -1,4 +1,5 @@
-name: Deploy to DigitalOcean VPS
+name: Complete Deployment Workflow
+
 on:
   push:
     branches: [ "main" ]
@@ -10,17 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Deploy to DigitalOcean
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: Prepare Deployment
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.DO_SERVER_IP }}
         username: ${{ secrets.DO_SERVER_USERNAME }}
         key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
         script: |
-          # Ensure project directory exists
+          # Create project directory
           sudo mkdir -p /var/www/html/do
           
           # Change to project directory
@@ -29,10 +30,40 @@ jobs:
           # Remove existing git repository and contents
           sudo rm -rf .git
           sudo rm -rf *
+    
+    - name: Deploy to DigitalOcean
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.DO_SERVER_IP }}
+        username: ${{ secrets.DO_SERVER_USERNAME }}
+        key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
+        script: |
+          # Navigate to project directory
+          cd /var/www/html/do
           
-          # Clone the entire repository
-          sudo git clone https://github.com/thev1ndu/do-workflow.git .
+          # Clone the repository
+          sudo git clone https://github.com/${{ github.repository }}.git .
           
-          # Set proper permissions
+          # Install dependencies
+          sudo npm install
+          
+          # Build project
+          sudo npm run build
+          
+          # Set permissions
           sudo chown -R www-data:www-data /var/www/html/do
           sudo chmod -R 755 /var/www/html/do
+          
+          # Restart web server
+          sudo systemctl restart apache2
+    
+    - name: Cleanup
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.DO_SERVER_IP }}
+        username: ${{ secrets.DO_SERVER_USERNAME }}
+        key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
+        script: |
+          # Remove old deployment artifacts
+          cd /var/www/html/do
+          sudo find . -type f -mtime +7 -delete
