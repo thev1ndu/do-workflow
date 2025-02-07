@@ -11,9 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v3
-    
+
     - name: Deploy to DigitalOcean
       uses: appleboy/ssh-action@master
       with:
@@ -21,20 +21,22 @@ jobs:
         username: ${{ secrets.DO_SERVER_USERNAME }}
         key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
         script: |
-          # Navigate to project directory
+          # Update and install git
+          sudo apt-get update
+          sudo apt-get install -y git
+
+          # Ensure project directory exists
+          sudo mkdir -p /var/www/html/do
+          
+          # Change to project directory
           cd /var/www/html/do
           
-          # Fetch latest changes and reset to latest
-          git fetch origin
-          git reset --hard origin/main
+          # Remove existing content
+          sudo rm -rf *
           
-          # Set correct permissions
-          sudo chown -R www-data:www-data .
-          sudo chmod -R 755 .
+          # Clone the entire repository
+          sudo git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME.git .
           
-          # Optional: Run build commands if needed
-          # npm install
-          # npm run build
-          
-          # Restart web server if necessary
-          sudo systemctl restart apache2
+          # Set proper permissions
+          sudo chown -R www-data:www-data /var/www/html/do
+          sudo chmod -R 755 /var/www/html/do
