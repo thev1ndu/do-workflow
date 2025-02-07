@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
     - name: Deploy to DigitalOcean
       uses: appleboy/ssh-action@master
       with:
@@ -17,27 +20,24 @@ jobs:
         username: ${{ secrets.DO_SERVER_USERNAME }}
         key: ${{ secrets.DO_SSH_PRIVATE_KEY }}
         script: |
+          # Ensure git is installed
+          sudo apt-get update
+          sudo apt-get install -y git
+          
           # Ensure the directory exists
           mkdir -p /var/www/html/do
           
           # Navigate to the directory
           cd /var/www/html/do
           
-          # If it's not a git repository, clone it first
+          # Clone or pull the repository
           if [ ! -d .git ]; then
-            git clone https://github.com/thev1ndu/do-workflow .
+            # Use GitHub Personal Access Token for cloning
+            git clone https://${{ secrets.GITHUB_TOKEN }}@https://github.com/thev1ndu/do-workflow.git .
+          else
+            git pull origin main
           fi
-          
-          # Pull latest changes
-          git pull origin main
           
           # Set correct permissions
           sudo chown -R www-data:www-data .
           sudo chmod -R 755 .
-          
-          # Optional: Run build commands
-          # npm install
-          # npm run build
-          
-          # Restart web server if necessary
-          sudo systemctl restart apache2
